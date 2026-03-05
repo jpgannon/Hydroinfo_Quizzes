@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Summary Assessment: Chapters 1, 2 &amp; 6</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #0f2744;
+    --navy-mid: #1a3a5c;
+    --navy-light: #2a5298;
+    --accent: #f59e0b;
+    --green: #22c55e;
+    --red: #ef4444;
+    --bg: #f0f5fb;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,158,11,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,158,11,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; position: relative; z-index: 1; }
+  .header {
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: 'ASSESS';
+    position: absolute;
+    right: -12px; top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 68px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.04);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .header-label { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .header-title { font-size: 24px; font-weight: 700; color: white; margin-bottom: 8px; }
+  .chapter-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { font-size: 11px; font-weight: 700; font-family: var(--mono); padding: 3px 10px; border-radius: 99px; }
+  .pill-1 { background: rgba(0,180,216,0.2); color: #7dd3fc; }
+  .pill-2 { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .pill-6 { background: rgba(99,102,241,0.2); color: #c4b5fd; }
+  .progress-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .score-badge { background: #dcfce7; color: #166534; font-weight: 700; padding: 3px 12px; border-radius: 99px; font-size: 13px; display: none; }
+  .progress-bar-bg { background: #dce4ed; border-radius: 99px; height: 6px; margin-bottom: 24px; }
+  .progress-bar-fill { background: linear-gradient(90deg, var(--accent), var(--navy-light)); height: 6px; border-radius: 99px; transition: width 0.4s ease; }
+  .card { background: var(--card); border-radius: 14px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(15,39,68,0.08); border: 1px solid var(--border); }
+  .card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .type-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; }
+  .type-ts { background: #fff7ed; color: #c2410c; }
+  .type-ps { background: #eff6ff; color: #1d4ed8; }
+  .type-co { background: #f5f3ff; color: #6d28d9; }
+  .chapter-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; font-family: var(--mono); padding: 4px 10px; border-radius: 99px; }
+  .ch-1 { background: rgba(0,180,216,0.12); color: #0284c7; }
+  .ch-2 { background: rgba(16,185,129,0.12); color: #059669; }
+  .ch-6 { background: rgba(99,102,241,0.12); color: #4f46e5; }
+  .question-text { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.65; margin-bottom: 16px; }
+  .code-block { display: block; background: #0f2744; color: #fde68a; font-family: var(--mono); font-size: 13px; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; white-space: pre; overflow-x: auto; line-height: 1.7; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border-radius: 10px; border: 2px solid var(--border); background: #f8fafc; cursor: pointer; transition: all 0.15s; font-size: 14.5px; line-height: 1.5; color: var(--text); font-family: var(--sans); text-align: left; width: 100%; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: #fffbeb; }
+  .option.selected:not(.submitted) { border-color: var(--navy-light); background: #eff6ff; }
+  .option.correct { border-color: var(--green); background: #f0fdf4; color: #166534; }
+  .option.wrong { border-color: var(--red); background: #fef2f2; color: #991b1b; }
+  .option.disabled { cursor: default; }
+  .opt-letter { min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--mono); background: var(--border); color: var(--muted); flex-shrink: 0; margin-top: 1px; transition: all 0.15s; }
+  .option.selected:not(.submitted) .opt-letter { background: var(--navy-light); color: white; }
+  .option.correct .opt-letter { background: var(--green); color: white; }
+  .option.wrong .opt-letter { background: var(--red); color: white; }
+  .opt-check { margin-left: auto; font-size: 18px; flex-shrink: 0; padding-left: 8px; }
+  .explanation { margin-top: 18px; background: #f1f5f9; border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; padding: 13px 16px; font-size: 13.5px; color: #334155; line-height: 1.6; animation: fadeIn 0.3s ease; }
+  .explanation strong { color: var(--navy-mid); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .nav-group { display: flex; gap: 10px; }
+  .btn { padding: 10px 22px; border-radius: 9px; border: 2px solid var(--border); background: white; cursor: pointer; font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--text); transition: all 0.15s; }
+  .btn:hover:not(:disabled) { border-color: var(--navy-mid); background: #f8fafc; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-primary:hover:not(:disabled) { background: var(--navy-mid); border-color: var(--navy-mid); }
+  .btn-danger { background: var(--red); color: white; border-color: var(--red); }
+  .btn-danger:hover:not(:disabled) { background: #dc2626; }
+  .dots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 28px; }
+  .dot { width: 28px; height: 28px; border-radius: 50%; background: var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); transition: all 0.15s; font-family: var(--mono); }
+  .dot.active { background: var(--navy); color: white; transform: scale(1.15); }
+  .dot.answered { background: #fcd34d; color: #78350f; }
+  .dot.correct-dot { background: var(--green); color: white; }
+  .dot.wrong-dot { background: var(--red); color: white; }
+  .results { background: var(--navy); border-radius: 14px; padding: 32px; text-align: center; color: white; margin-top: 24px; animation: fadeIn 0.4s ease; display: none; }
+  .results-emoji { font-size: 48px; margin-bottom: 12px; }
+  .results-score { font-size: 48px; font-weight: 700; font-family: var(--mono); color: var(--accent); }
+  .results-label { font-size: 15px; color: rgba(255,255,255,0.6); margin-top: 4px; margin-bottom: 20px; }
+  .results-msg { font-size: 16px; color: rgba(255,255,255,0.85); max-width: 480px; margin: 0 auto 24px; line-height: 1.6; }
+  .breakdown { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+  .breakdown-item { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 20px; text-align: center; min-width: 120px; }
+  .breakdown-label { font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .breakdown-val { font-size: 22px; font-weight: 700; font-family: var(--mono); }
+  .breakdown-val.c1 { color: #7dd3fc; }
+  .breakdown-val.c2 { color: #6ee7b7; }
+  .breakdown-val.c6 { color: #c4b5fd; }
+  @media (max-width: 520px) {
+    .header { padding: 20px; }
+    .header-title { font-size: 18px; }
+    .card { padding: 20px; }
+    .question-text { font-size: 15px; }
+    .breakdown { gap: 10px; }
+    .breakdown-item { min-width: 90px; padding: 10px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div style="max-width:780px;margin:0 auto 20px;padding:0 16px;position:relative;z-index:1;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#64748b;background:white;border:2px solid #e2e8f0;padding:7px 14px;border-radius:99px;transition:all 0.15s;box-shadow:0 1px 4px rgba(15,39,68,0.06);"
+     onmouseover="this.style.borderColor='#2a5298';this.style.color='#0f2744';"
+     onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b';">
+    &#8592; Quiz Hub
+  </a>
+</div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="header-label">CUAHSI Hydroinformatics &middot; Summary Assessment</div>
+    <div class="header-title">Chapters 1, 2 &amp; 6: Cumulative Review</div>
+    <div class="chapter-pills">
+      <span class="pill pill-1">Ch.1 ggplot2</span>
+      <span class="pill pill-2">Ch.2 dplyr &amp; tidyverse</span>
+      <span class="pill pill-6">Ch.6 Joins, Pivots &amp; dataRetrieval</span>
+    </div>
+  </div>
+  <div class="progress-row">
+    <span id="prog-label">Question 1 of 30</span>
+    <span class="score-badge" id="score-badge"></span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progress-fill" style="width:3.3%"></div>
+  </div>
+  <div class="card" id="question-card"></div>
+  <div class="nav">
+    <div class="nav-group">
+      <button class="btn" id="btn-prev" onclick="navigate(-1)" disabled>&#8592; Prev</button>
+      <button class="btn" id="btn-next" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    <div class="nav-group">
+      <button class="btn btn-primary" id="btn-submit" onclick="submitQuiz()" disabled>Submit (0/30 answered)</button>
+      <button class="btn btn-danger" id="btn-reset" onclick="resetQuiz()" style="display:none">Retake</button>
+    </div>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="results" id="results"></div>
+</div>
+
+<script>
+// Answer distribution across 30 questions:
+// A(0): Q1,4,8,11,15,18,22,26  = 8
+// B(1): Q2,6,9,13,16,20,24,28  = 8
+// C(2): Q3,7,10,14,17,21,25,29 = 8
+// D(3): Q5,12,19,23,27,30      = 6
+// (slight A/B/C lean intentional — D used for variety, total ≈ balanced)
+
+const Q = [
+
+  // ── CHAPTER 1: ggplot2 ──────────────────────────────────────────────────────
+
+  // Q1 — ans: A (Ch1, PS)
+  {ch:1, type:"Problem Solving",
+   q:"Which code correctly produces a line plot of the Pine Creek dataset with datetime on the x-axis and discharge (cfs) on the y-axis?",
+   code:null,
+   opts:[
+     "ggplot(data = Pine, aes(x = datetime, y = cfs)) + geom_line()",
+     "ggplot(Pine, aes(x = cfs, y = datetime)) + geom_line()",
+     "ggplot(data = Pine) + geom_line(x = datetime, y = cfs)",
+     "plot(Pine$datetime, Pine$cfs, geom = 'line')"
+   ],
+   ans:0,
+   exp:"A valid ggplot call needs data =, an aes() mapping with x and y correct, and a geom layer joined with +. Option B has the axes reversed. Option C puts x and y outside aes(). Option D is base R syntax, not ggplot2."},
+
+  // Q2 — ans: B (Ch1, Trouble)
+  {ch:1, type:"Troubleshooting",
+   q:"A student writes the code below hoping for blue points. What actually appears?",
+   code:'ggplot(data = Pine, aes(x = datetime, y = cfs, color = "blue")) +\n  geom_point()',
+   opts:[
+     "An error because color cannot go inside aes()",
+     "Points in a default ggplot color with a legend labeled 'blue'",
+     "Blue points with no legend",
+     "Gray points with no color applied"
+   ],
+   ans:1,
+   exp:"Placing color = \"blue\" inside aes() maps the string 'blue' as a data variable, not a color instruction. ggplot assigns its first default color and creates a legend labeled 'blue'. The fix is to move color = \"blue\" to geom_point() outside aes()."},
+
+  // Q3 — ans: C (Ch1, PS)
+  {ch:1, type:"Problem Solving",
+   q:"What does scales = \"free_y\" do in the following call?",
+   code:'facet_wrap(facets = ~parameter_nm, scales = "free_y", ncol = 1)',
+   opts:[
+     "Forces all panels to share the same y-axis scale",
+     "Filters the data to free-flowing parameters only",
+     "Allows each panel to have its own independent y-axis scale",
+     "Scales the y-axis by the number of free parameters"
+   ],
+   ans:2,
+   exp:"scales = \"free_y\" lets each facet panel size its y-axis independently. This is essential when plotting discharge (ft³/s) and temperature (°C) together — they have completely different numeric ranges and would be unreadable on a shared scale."},
+
+  // Q4 — ans: A (Ch1, Trouble)
+  {ch:1, type:"Troubleshooting",
+   q:"Which of the following ggplot calls has a syntax error that will prevent it from running?",
+   code:null,
+   opts:[
+     "ggplot(data = SNP, aes(x = datetime, y = cfs)) geom_line()",
+     "ggplot(data = SNP, aes(x = datetime, y = cfs)) + geom_line() + scale_y_log10()",
+     "ggplot(data = SNP, aes(x = datetime, y = cfs, color = StationID)) + geom_line()",
+     "ggplot(data = SNP, aes(x = datetime, y = cfs)) + geom_point(alpha = 0.3)"
+   ],
+   ans:0,
+   exp:"Option A is missing the + between ggplot() and geom_line(). In ggplot2 every layer must be connected with +. Without it, R sees two separate expressions and throws an error."},
+
+  // Q5 — ans: D (Ch1, PS)
+  {ch:1, type:"Problem Solving",
+   q:"When would you use facet_grid() instead of facet_wrap()?",
+   code:null,
+   opts:[
+     "When you need all panels to share the same axis scales",
+     "When your dataset has more than 1,000 rows",
+     "When you have only one grouping variable and want a flexible layout",
+     "When you want to organize panels by two variables simultaneously into a row-by-column matrix"
+   ],
+   ans:3,
+   exp:"facet_grid(rows ~ cols) creates a structured matrix using two categorical variables. The lesson uses facet_grid(StationID ~ month) to produce a grid where each cell shows one station in one month. facet_wrap() handles only one variable and wraps panels into a ribbon."},
+
+  // Q6 — ans: B (Ch1, PS)
+  {ch:1, type:"Problem Solving",
+   q:"A student wants a dashed linear regression line and raw data points on the same plot. Which code is correct?",
+   code:null,
+   opts:[
+     'geom_line(method = "lm", linetype = 2) + geom_point()',
+     'stat_smooth(method = "lm", linetype = 2) + geom_point()',
+     'geom_abline(linetype = 2) + geom_point()',
+     'geom_smooth(type = "linear") + geom_dot()'
+   ],
+   ans:1,
+   exp:"stat_smooth(method = \"lm\") fits a linear model and draws the smoothed line. linetype = 2 makes it dashed. geom_point() overlays the raw data. geom_line() just connects points in order — it does not fit a model."},
+
+  // Q7 — ans: C (Ch1, Concept)
+  {ch:1, type:"Concept",
+   q:"What is the combined visual effect of setting alpha = 0.3 and pch = 21 in geom_point()?",
+   code:null,
+   opts:[
+     "Points become 30% larger with a hollow interior",
+     "alpha is ignored when pch = 21 is set",
+     "Points are mostly transparent and have a fillable background, making overlap and density visible",
+     "Points become invisible because hollow and transparent combine to zero opacity"
+   ],
+   ans:2,
+   exp:"alpha = 0.3 makes points 70% transparent, so overlapping regions appear darker and reveal density. pch = 21 gives points a fillable background (set with bg =). Together they reduce clutter while letting the data's distribution show through."},
+
+  // ── CHAPTER 2: dplyr & R basics ─────────────────────────────────────────────
+
+  // Q8 — ans: A (Ch2, PS)
+  {ch:2, type:"Problem Solving",
+   q:"Which filter() call correctly returns rbi rows where STATE is Vermont AND drainage area exceeds 100 km²?",
+   code:null,
+   opts:[
+     'filter(rbi, STATE == "VT" & DRAIN_SQKM > 100)',
+     'filter(rbi, STATE = "VT" & DRAIN_SQKM > 100)',
+     'filter(rbi, STATE == "VT" | DRAIN_SQKM > 100)',
+     'filter(rbi, STATE == VT & DRAIN_SQKM > 100)'
+   ],
+   ans:0,
+   exp:"& requires both conditions to be true. The equality test in a condition uses == not =. String values must be quoted — without quotes, R looks for an object named VT and throws an error. Option C uses | (OR), which is too broad."},
+
+  // Q9 — ans: B (Ch2, PS)
+  {ch:2, type:"Problem Solving",
+   q:"What does the following pipe chain produce?",
+   code:"rbi |>\n  group_by(STATE) |>\n  summarize(mean_drain = mean(DRAIN_SQKM),\n            n = n())",
+   opts:[
+     "A plot of mean drainage area grouped by state",
+     "A tibble with one row per state showing mean drainage area and gage count",
+     "A tibble with one row per gage showing each gage's drainage area",
+     "An error because n() is not a valid summarize() function"
+   ],
+   ans:1,
+   exp:"group_by(STATE) tags the tibble by state. summarize() then collapses each state's rows into one summary row. mean(DRAIN_SQKM) gives the average drainage area per state and n() counts the number of gages in each group."},
+
+  // Q10 — ans: C (Ch2, Trouble)
+  {ch:2, type:"Troubleshooting",
+   q:"A student runs mutate() but the original tibble is unchanged afterward. What is the problem?",
+   code:"mutate(rbi, T_RANGE = T_MAX_SITE - T_MIN_SITE)",
+   opts:[
+     "The subtraction operator is not valid inside mutate()",
+     "mutate() requires group_by() first in order to save results",
+     "dplyr functions return a new tibble without modifying the original — the result must be assigned with <-",
+     "T_RANGE is a reserved name in R and cannot be used as a new column"
+   ],
+   ans:2,
+   exp:"dplyr functions never modify in place. They return a transformed copy. To keep the result the student must write: rbi <- mutate(rbi, T_RANGE = T_MAX_SITE - T_MIN_SITE). This is one of the most common beginner mistakes with dplyr."},
+
+  // Q11 — ans: A (Ch2, PS)
+  {ch:2, type:"Problem Solving",
+   q:"What is the key difference between read_csv() and read.csv() when loading data?",
+   code:null,
+   opts:[
+     "read_csv() returns a tibble with column types shown; read.csv() returns a plain base R data frame",
+     "read.csv() is the tidyverse version; read_csv() is the base R version",
+     "They produce identical objects — the difference is only speed",
+     "read_csv() only works on files under 1 MB"
+   ],
+   ans:0,
+   exp:"read_csv() is from readr (tidyverse) and returns a tibble, which displays column types and integrates seamlessly with dplyr and ggplot2. read.csv() is base R, returns a plain data frame, and does not show column types by default."},
+
+  // Q12 — ans: D (Ch2, Trouble)
+  {ch:2, type:"Troubleshooting",
+   q:"Which of the following correctly stores the values 1 through 5 in 'nums' and prints it?",
+   code:null,
+   opts:[
+     "nums = [1, 2, 3, 4, 5]\nnums",
+     "nums < - c(1, 2, 3, 4, 5)\nnums",
+     "nums <- 1, 2, 3, 4, 5\nnums",
+     "nums <- c(1, 2, 3, 4, 5)\nnums"
+   ],
+   ans:3,
+   exp:"Multiple values must be wrapped in c(). The assignment operator must be <- with no internal space. Square brackets are not valid R vector syntax. Option C has no c() wrapper. Option B has a space inside <- making it invalid."},
+
+  // Q13 — ans: B (Ch2, PS)
+  {ch:2, type:"Problem Solving",
+   q:"A student wants to select only STANAME, STATE, RBI, DRAIN_SQKM — then sort by DRAIN_SQKM descending. Which statement is true?",
+   code:null,
+   opts:[
+     "Only arrange() then select() works — the other order drops DRAIN_SQKM before sorting",
+     "Both select-then-arrange and arrange-then-select produce the same final result here, since DRAIN_SQKM is kept in both steps",
+     "Only select() then arrange() works — arrange() must always come last in a pipe",
+     "filter() must be run before either select() or arrange()"
+   ],
+   ans:1,
+   exp:"Since DRAIN_SQKM is retained in the select() call, running arrange() either before or after select() produces the same sorted, trimmed result. Pipe step order matters when earlier steps remove columns or rows needed later — but not in this case."},
+
+  // Q14 — ans: C (Ch2, Concept)
+  {ch:2, type:"Concept",
+   q:"Why does the lesson recommend using <- for assignment and = only inside function calls?",
+   code:null,
+   opts:[
+     "= is technically invalid for assignment in R and throws errors in some contexts",
+     "<- executes faster than = at runtime",
+     "It clearly distinguishes storing a value (assignment) from setting a function option (parameter), making code easier to read",
+     "ggplot2 and dplyr require <- and will fail silently if = is used"
+   ],
+   ans:2,
+   exp:"Both <- and = can assign values in most R contexts, but the convention of <- for assignment and = for named function arguments makes code much easier to read — especially in complex pipelines where knowing whether something is being stored or configured matters."},
+
+  // Q15 — ans: A (Ch2, Trouble)
+  {ch:2, type:"Troubleshooting",
+   q:"A student assigns a summary result but nothing appears in the console. What is the correct way to view it?",
+   code:"state_summary <- rbi |>\n  group_by(STATE) |>\n  summarize(mean_rbi = mean(RBI))",
+   opts:[
+     "Type state_summary on its own line, or wrap the whole assignment in parentheses",
+     "The pipe |> suppresses output — use nested functions instead",
+     "Add print = TRUE as an argument to summarize()",
+     "Use -> instead of <- to force the result to print"
+   ],
+   ans:0,
+   exp:"In R, <- stores results silently without printing. To view the object, type its name on a new line (state_summary) or wrap the entire assignment expression in parentheses: (state_summary <- ...). The pipe has no effect on printing behavior."},
+
+  // ── CHAPTER 6: Joins, Pivots, dataRetrieval ─────────────────────────────────
+
+  // Q16 — ans: B (Ch6, Concept)
+  {ch:6, type:"Concept",
+   q:"You have 500 discharge records and chemistry samples for only 30 of those dates. You want all 500 discharge rows with chemistry attached where it exists. Which join is correct?",
+   code:null,
+   opts:[
+     "inner_join() — keeps only the 30 matching dates",
+     "left_join() — keeps all discharge rows; attaches chemistry where dates match; NA elsewhere",
+     "full_join() — keeps all rows from both datasets",
+     "right_join() — keeps only the chemistry rows"
+   ],
+   ans:1,
+   exp:"left_join() preserves every row from the left (discharge) dataset and attaches matching rows from the right (chemistry) dataset. Dates with no chemistry get NA. This is the canonical use case for left_join() described in the lesson."},
+
+  // Q17 — ans: C (Ch6, Concept)
+  {ch:6, type:"Concept",
+   q:"Two datasets share a key. River1 and River2 are in both; River3 is only in the left; River5 is only in the right. What does inner_join() return?",
+   code:null,
+   opts:[
+     "All four rivers, with NAs for missing values",
+     "River1, River2, and River3 — all left-side rows",
+     "Only River1 and River2 — the rows where both datasets have a match",
+     "River1, River2, and River5 — all right-side rows"
+   ],
+   ans:2,
+   exp:"inner_join() keeps only rows where the key exists in BOTH datasets. River3 (left only) and River5 (right only) are dropped. Only the two rows present in both — River1 and River2 — are returned."},
+
+  // Q18 — ans: A (Ch6, Trouble)
+  {ch:6, type:"Troubleshooting",
+   q:"A student writes the join below and gets an error. What is wrong?",
+   code:"left_join(dataAvailable, siteinfo, by = monitoring_location_id)",
+   opts:[
+     "The by argument requires a quoted string — monitoring_location_id is missing quotes",
+     "left_join() cannot be used when both tibbles share a column name",
+     "dataAvailable and siteinfo must be in the same order as the column appears",
+     "left_join() requires at least three tibbles as input"
+   ],
+   ans:0,
+   exp:"The by argument must be a quoted character string or vector. Without quotes, R tries to evaluate monitoring_location_id as an object and fails. The correct syntax is by = \"monitoring_location_id\"."},
+
+  // Q19 — ans: D (Ch6, PS)
+  {ch:6, type:"Problem Solving",
+   q:"The key column is named 'monitoring_location_id' in the left tibble and 'location_id' in the right. Which syntax is correct?",
+   code:null,
+   opts:[
+     'left_join(left_tbl, right_tbl, by = "monitoring_location_id")',
+     'left_join(left_tbl, right_tbl, by = monitoring_location_id == location_id)',
+     'left_join(left_tbl, right_tbl, key = c("monitoring_location_id", "location_id"))',
+     'left_join(left_tbl, right_tbl, by = c("monitoring_location_id" = "location_id"))'
+   ],
+   ans:3,
+   exp:"When key columns have different names, use by = c(\"left_name\" = \"right_name\") with both names quoted. Option A fails because 'location_id' doesn't exist in the left tibble. Option B uses a logical expression. Option C uses the wrong argument name 'key'."},
+
+  // Q20 — ans: B (Ch6, Concept)
+  {ch:6, type:"Concept",
+   q:"In LONG format data, how are multiple variables (e.g. temperature and discharge) stored?",
+   code:null,
+   opts:[
+     "Each variable has its own column with one row per date",
+     "Each measurement has its own row, with a 'name' column identifying the variable and a 'value' column holding the number",
+     "All values are stored in one comma-separated string per row",
+     "Variables appear only as column headers with no value column"
+   ],
+   ans:1,
+   exp:"In long format there is one row per individual measurement. A categorical column (like parameter_nm) identifies what was measured, and a value column holds the number. This is the format returned by read_waterdata_daily() when multiple parameters are downloaded."},
+
+  // Q21 — ans: C (Ch6, Concept)
+  {ch:6, type:"Concept",
+   q:"Why is long data generally better for ggplot2 when plotting multiple groups or parameters?",
+   code:null,
+   opts:[
+     "ggplot2 throws an error on wide-format input",
+     "Long data automatically removes NAs before plotting",
+     "A single categorical column like parameter_nm can be passed to color or facets in one aes() call, avoiding a separate geom layer per variable",
+     "Wide format cannot be used with geom_line()"
+   ],
+   ans:2,
+   exp:"With long data, a single column containing labels like 'Discharge' and 'Temperature' can drive facet_wrap() or color = in one line. Wide data would require writing a separate geom for every variable, which scales very poorly."},
+
+  // Q22 — ans: A (Ch6, PS)
+  {ch:6, type:"Problem Solving",
+   q:"What does pivot_wider() produce from a long-format dataset?",
+   code:null,
+   opts:[
+     "A wider table with more columns and fewer rows, where unique values from a 'names' column become new column headers",
+     "More rows by duplicating observations",
+     "A table with all numeric columns converted to characters",
+     "A table with NA rows removed"
+   ],
+   ans:0,
+   exp:"pivot_wider() takes a 'names' column (whose unique values become new headers) and a 'values' column (whose contents fill those headers). The result has more columns and fewer rows — the opposite of pivot_longer()."},
+
+  // Q23 — ans: D (Ch6, PS)
+  {ch:6, type:"Problem Solving",
+   q:"In the lesson, why was pivot_wider() needed before computing the flow difference between Radford and Ivanhoe?",
+   code:null,
+   opts:[
+     "Because ggplot2 cannot draw line plots from long-format data",
+     "Because pivot_wider() automatically computes differences between columns",
+     "Because filter() requires wide format to subset by site name",
+     "Because in long format both sites share a single 'value' column — pivoting creates one column per site so mutate() subtraction is possible"
+   ],
+   ans:3,
+   exp:"In long format, all discharge values — regardless of site — are stacked in one 'value' column. You cannot subtract Radford's values from Ivanhoe's without separating them into their own columns first. pivot_wider() makes that straightforward mutate() arithmetic possible."},
+
+  // Q24 — ans: B (Ch6, Trouble)
+  {ch:6, type:"Troubleshooting",
+   q:"A student tries to reference a pivot_wider() column named 'NEW RIVER AT RADFORD, VA' inside mutate() and gets an error. What is the fix?",
+   code:null,
+   opts:[
+     "Replace spaces with dots — R converts them automatically in column names",
+     "Wrap the column name in backticks: `NEW RIVER AT RADFORD, VA`",
+     "Surround it with double quotes: \"NEW RIVER AT RADFORD, VA\"",
+     "Column names with spaces must be removed before pivoting — there is no workaround"
+   ],
+   ans:1,
+   exp:"Column names with spaces or special characters must be wrapped in backticks (`) when referenced in R code. Double quotes are for strings, not column name references. Alternatively, renaming the column first with rename() is good long-term practice."},
+
+  // Q25 — ans: C (Ch6, PS)
+  {ch:6, type:"Problem Solving",
+   q:"Which dataRetrieval function checks what daily parameters are available at a site before you download any data?",
+   code:null,
+   opts:[
+     "readWQPqw()",
+     "read_waterdata_daily()",
+     "read_waterdata_ts_meta()",
+     "read_waterdata_monitoring_location()"
+   ],
+   ans:2,
+   exp:"read_waterdata_ts_meta() returns metadata about available time series — parameter codes, begin and end dates, and computation period — without downloading the actual data. This is how you explore what exists before committing to a full download."},
+
+  // ── CROSS-CHAPTER SYNTHESIS ──────────────────────────────────────────────────
+
+  // Q26 — ans: A (Ch6+Ch1, PS)
+  {ch:6, type:"Problem Solving",
+   q:"After downloading long-format multi-site, multi-parameter data, which ggplot2 approach best plots discharge and temperature as separate stacked panels without splitting the data?",
+   code:null,
+   opts:[
+     'Use facet_wrap(facets = ~parameter_nm, scales = "free_y", ncol = 1) on the long-format data',
+     "Pivot to wide format first, then add two separate geom_line() layers",
+     "Use color = parameter_nm to distinguish parameters on the same axes",
+     "Create two separate ggplot() calls and stack them with gridExtra"
+   ],
+   ans:0,
+   exp:"Long-format data with a parameter_nm column is perfectly suited for facet_wrap(). scales = \"free_y\" is essential because discharge and temperature have completely different numeric ranges. ncol = 1 stacks panels vertically for easy time comparison."},
+
+  // Q27 — ans: D (Ch6, Trouble)
+  {ch:6, type:"Troubleshooting",
+   q:"A student passes a site number as a plain integer to a dataRetrieval function and gets no results. What is wrong?",
+   code:"read_waterdata_monitoring_location(monitoring_location_id = 3171000)",
+   opts:[
+     "The function does not accept a monitoring_location_id argument",
+     "The site number needs more leading zeros",
+     "The function requires a vector of at least two site numbers",
+     "Site numbers must be character strings with the 'USGS-' prefix, e.g. \"USGS-03171000\""
+   ],
+   ans:3,
+   exp:"dataRetrieval requires site IDs as character strings (quoted) with the agency code prefix 'USGS-'. Passing a bare integer fails because it is numeric rather than character and lacks the required prefix."},
+
+  // Q28 — ans: B (Ch6+Ch1, PS)
+  {ch:6, type:"Problem Solving",
+   q:"A student downloads data with read_waterdata_daily() and immediately pipes it into a left_join() with parameterCdFile. What does the pipeline accomplish?",
+   code:'swva_dat <- read_waterdata_daily(\n  monitoring_location_id = swva_sites$monitoring_location_id,\n  parameter_code = params,\n  time = c(start, end),\n  skipGeometry = TRUE) |>\n  left_join(parameterCdFile,\n            by = c("parameter_code" = "parameter_cd"))',
+   opts:[
+     "Saves the result to a CSV named parameterCdFile",
+     "Downloads data and immediately attaches human-readable parameter names from the bundled lookup table, all in one pipeline",
+     "Converts the data from long to wide format using parameter codes as column headers",
+     "Filters the download to only the parameter codes found in parameterCdFile"
+   ],
+   ans:1,
+   exp:"The pipe passes the downloaded tibble straight into left_join(). The join attaches human-readable parameter names (like 'Discharge') from parameterCdFile — a lookup table bundled with the dataRetrieval package — keyed on the parameter code column, with no intermediate object needed."},
+
+  // Q29 — ans: C (Ch2+Ch1, Trouble)
+  {ch:2, type:"Troubleshooting",
+   q:"A student wants to summarize rbi by state and immediately plot the result. Which pipe chain is correct?",
+   code:null,
+   opts:[
+     "rbi |> group_by(STATE) + summarize(mean_rbi = mean(RBI)) + ggplot(aes(x = STATE, y = mean_rbi)) + geom_col()",
+     "rbi |> group_by(STATE) |> summarize(mean_rbi = mean(RBI)) |> ggplot(aes(x = STATE, y = mean_rbi)) |> geom_col()",
+     "rbi |> group_by(STATE) |> summarize(mean_rbi = mean(RBI)) |> ggplot(aes(x = STATE, y = mean_rbi)) + geom_col()",
+     "rbi |> group_by(STATE) |> summarize(mean_rbi = mean(RBI)) -> ggplot(aes(x = STATE, y = mean_rbi)) + geom_col()"
+   ],
+   ans:2,
+   exp:"The pipe |> connects dplyr steps. Once data enters ggplot(), additional layers are added with + not |>. Option C correctly switches from |> to + at the ggplot() boundary. Option B incorrectly uses |> before geom_col(). Option A uses + between dplyr functions, which is wrong."},
+
+  // Q30 — ans: D (Ch6+Ch1, Concept)
+  {ch:6, type:"Concept",
+   q:"Water quality data from readWQPqw() has a CharacteristicName column ('Chloride', 'Specific conductance') and a ResultMeasureValue column. A student wants to plot Chloride vs. Specific conductance as a scatter plot. What must happen first?",
+   code:null,
+   opts:[
+     "Use pivot_longer() to add more rows to the dataset",
+     "Use inner_join() to merge the two characteristics into one row per date",
+     "Filter to just one characteristic at a time and make two separate plots",
+     "Use pivot_wider() so Chloride and Specific conductance each become their own column, then map them to x and y in ggplot"
+   ],
+   ans:3,
+   exp:"A scatter plot requires two separate numeric columns mapped to x and y. In long format both values share one 'ResultMeasureValue' column. pivot_wider(names_from = CharacteristicName, values_from = ResultMeasureValue) gives each its own column, making aes(x = Chloride, y = Spec_Cond) possible."}
+
+];
+
+// Final answer distribution:
+// A(0): Q1,4,8,11,15,18,22,26 = 8
+// B(1): Q2,6,9,13,16,20,24,28 = 8
+// C(2): Q3,7,10,14,17,21,25,29 = 8
+// D(3): Q5,12,19,23,27,30 = 6
+
+let cur = 0, ans = {}, submitted = false;
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function typeCls(t){ return t==="Troubleshooting"?"type-ts":t==="Problem Solving"?"type-ps":"type-co"; }
+function chCls(c){ return c===1?"ch-1":c===2?"ch-2":"ch-6"; }
+function chLabel(c){ return c===1?"Ch.1 · ggplot2":c===2?"Ch.2 · dplyr":"Ch.6 · Joins & Pivots"; }
+
+function render(){
+  const q = Q[cur];
+  const sel = ans[cur];
+  const codeHTML = q.code ? `<code class="code-block">${esc(q.code)}</code>` : '';
+  const optsHTML = q.opts.map((o,i)=>{
+    let cls='option', chk='';
+    if(submitted){
+      cls+=' disabled submitted';
+      if(i===q.ans){cls+=' correct';chk='<span class="opt-check">&#10003;</span>';}
+      else if(sel===i){cls+=' wrong';chk='<span class="opt-check">&#10007;</span>';}
+    } else {
+      if(sel===i) cls+=' selected';
+    }
+    return `<button class="${cls}" onclick="pick(${i})"><span class="opt-letter">${'ABCD'[i]}</span><span>${esc(o)}</span>${chk}</button>`;
+  }).join('');
+  const expHTML = submitted ? `<div class="explanation"><strong>Explanation:</strong> ${esc(q.exp)}</div>` : '';
+
+  document.getElementById('question-card').innerHTML =
+    `<div class="card-top">
+       <span class="type-badge ${typeCls(q.type)}">${q.type}</span>
+       <span class="chapter-badge ${chCls(q.ch)}">${chLabel(q.ch)}</span>
+     </div>
+     <div class="question-text">${esc(q.q)}</div>
+     ${codeHTML}
+     <div class="options">${optsHTML}</div>
+     ${expHTML}`;
+
+  const pct = ((cur+1)/Q.length*100).toFixed(1);
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('prog-label').textContent = `Question ${cur+1} of ${Q.length}`;
+  document.getElementById('btn-prev').disabled = cur===0;
+  document.getElementById('btn-next').disabled = cur===Q.length-1;
+  const count = Object.keys(ans).length;
+  const sub = document.getElementById('btn-submit');
+  sub.textContent = `Submit (${count}/${Q.length} answered)`;
+  sub.disabled = count < Q.length;
+  renderDots();
+}
+
+function pick(i){ if(submitted) return; ans[cur]=i; render(); }
+function navigate(d){ cur=Math.max(0,Math.min(Q.length-1,cur+d)); render(); }
+function goTo(i){ cur=i; render(); }
+
+function renderDots(){
+  document.getElementById('dots').innerHTML = Q.map((_,i)=>{
+    let cls='dot';
+    if(i===cur) cls+=' active';
+    else if(submitted && ans[i]===Q[i].ans) cls+=' correct-dot';
+    else if(submitted && ans[i]!==undefined) cls+=' wrong-dot';
+    else if(ans[i]!==undefined) cls+=' answered';
+    return `<div class="${cls}" onclick="goTo(${i})">${i+1}</div>`;
+  }).join('');
+}
+
+function submitQuiz(){
+  submitted=true;
+  const total = Q.length;
+  const score = Q.reduce((a,q,i)=>a+(ans[i]===q.ans?1:0),0);
+  const byChapter = {1:{correct:0,total:0},2:{correct:0,total:0},6:{correct:0,total:0}};
+  Q.forEach((q,i)=>{ byChapter[q.ch].total++; if(ans[i]===q.ans) byChapter[q.ch].correct++; });
+
+  document.getElementById('btn-submit').style.display='none';
+  document.getElementById('btn-reset').style.display='';
+  const badge = document.getElementById('score-badge');
+  badge.textContent=`${score}/${total} (${Math.round(score/total*100)}%)`;
+  badge.style.display='';
+
+  const emoji = score>=27?'&#127881;':score>=21?'&#128077;':'&#128218;';
+  const msg = score>=27?'Outstanding! Strong command across all three chapters.':score>=21?'Good work! Check the explanations for questions you missed.':'Keep reviewing — the chapter badges on each question show you exactly where to focus.';
+
+  const res = document.getElementById('results');
+  res.style.display='block';
+  res.innerHTML=`
+    <div class="results-emoji">${emoji}</div>
+    <div class="results-score">${score} / ${total}</div>
+    <div class="results-label">${Math.round(score/total*100)}% correct</div>
+    <div class="results-msg">${msg}</div>
+    <div class="breakdown">
+      <div class="breakdown-item">
+        <div class="breakdown-label">Ch.1 ggplot2</div>
+        <div class="breakdown-val c1">${byChapter[1].correct}/${byChapter[1].total}</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-label">Ch.2 dplyr</div>
+        <div class="breakdown-val c2">${byChapter[2].correct}/${byChapter[2].total}</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="breakdown-label">Ch.6 Joins &amp; Pivots</div>
+        <div class="breakdown-val c6">${byChapter[6].correct}/${byChapter[6].total}</div>
+      </div>
+    </div>`;
+  render();
+}
+
+function resetQuiz(){
+  ans={}; submitted=false; cur=0;
+  document.getElementById('btn-submit').style.display='';
+  document.getElementById('btn-reset').style.display='none';
+  document.getElementById('score-badge').style.display='none';
+  document.getElementById('results').style.display='none';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
