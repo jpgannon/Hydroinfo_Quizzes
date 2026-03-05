@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chapter 2 Quiz: R Tidyverse Programming Basics</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #0f2744;
+    --navy-mid: #1a3a5c;
+    --navy-light: #2a5298;
+    --accent: #10b981;
+    --green: #22c55e;
+    --red: #ef4444;
+    --bg: #f0f5fb;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(16,185,129,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16,185,129,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; position: relative; z-index: 1; }
+  .header {
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: 'dplyr';
+    position: absolute;
+    right: -10px; top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 80px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.04);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .header-label { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .header-title { font-size: 26px; font-weight: 700; color: white; margin-bottom: 6px; }
+  .header-sub { font-size: 14px; color: rgba(255,255,255,0.55); }
+  .progress-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .score-badge { background: #dcfce7; color: #166534; font-weight: 700; padding: 3px 12px; border-radius: 99px; font-size: 13px; display: none; }
+  .progress-bar-bg { background: #dce4ed; border-radius: 99px; height: 6px; margin-bottom: 24px; }
+  .progress-bar-fill { background: linear-gradient(90deg, var(--accent), var(--navy-light)); height: 6px; border-radius: 99px; transition: width 0.4s ease; }
+  .card { background: var(--card); border-radius: 14px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(15,39,68,0.08); border: 1px solid var(--border); }
+  .type-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; margin-bottom: 16px; }
+  .type-ts { background: #fff7ed; color: #c2410c; }
+  .type-ps { background: #eff6ff; color: #1d4ed8; }
+  .type-co { background: #f0fdf4; color: #166534; }
+  .question-text { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.65; margin-bottom: 16px; }
+  .code-block { display: block; background: #0f2744; color: #6ee7b7; font-family: var(--mono); font-size: 13px; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; white-space: pre; overflow-x: auto; line-height: 1.7; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border-radius: 10px; border: 2px solid var(--border); background: #f8fafc; cursor: pointer; transition: all 0.15s; font-size: 14.5px; line-height: 1.5; color: var(--text); font-family: var(--sans); text-align: left; width: 100%; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: #f0fdf8; }
+  .option.selected:not(.submitted) { border-color: var(--navy-light); background: #eff6ff; }
+  .option.correct { border-color: var(--green); background: #f0fdf4; color: #166534; }
+  .option.wrong { border-color: var(--red); background: #fef2f2; color: #991b1b; }
+  .option.disabled { cursor: default; }
+  .opt-letter { min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--mono); background: var(--border); color: var(--muted); flex-shrink: 0; margin-top: 1px; transition: all 0.15s; }
+  .option.selected:not(.submitted) .opt-letter { background: var(--navy-light); color: white; }
+  .option.correct .opt-letter { background: var(--green); color: white; }
+  .option.wrong .opt-letter { background: var(--red); color: white; }
+  .opt-check { margin-left: auto; font-size: 18px; flex-shrink: 0; padding-left: 8px; }
+  .explanation { margin-top: 18px; background: #f1f5f9; border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; padding: 13px 16px; font-size: 13.5px; color: #334155; line-height: 1.6; animation: fadeIn 0.3s ease; }
+  .explanation strong { color: var(--navy-mid); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .nav-group { display: flex; gap: 10px; }
+  .btn { padding: 10px 22px; border-radius: 9px; border: 2px solid var(--border); background: white; cursor: pointer; font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--text); transition: all 0.15s; }
+  .btn:hover:not(:disabled) { border-color: var(--navy-mid); background: #f8fafc; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-primary:hover:not(:disabled) { background: var(--navy-mid); border-color: var(--navy-mid); }
+  .btn-danger { background: var(--red); color: white; border-color: var(--red); }
+  .btn-danger:hover:not(:disabled) { background: #dc2626; }
+  .dots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 28px; }
+  .dot { width: 28px; height: 28px; border-radius: 50%; background: var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); transition: all 0.15s; font-family: var(--mono); }
+  .dot.active { background: var(--navy); color: white; transform: scale(1.15); }
+  .dot.answered { background: #6ee7b7; color: #064e3b; }
+  .dot.correct-dot { background: var(--green); color: white; }
+  .dot.wrong-dot { background: var(--red); color: white; }
+  .results { background: var(--navy); border-radius: 14px; padding: 32px; text-align: center; color: white; margin-top: 24px; animation: fadeIn 0.4s ease; display: none; }
+  .results-emoji { font-size: 48px; margin-bottom: 12px; }
+  .results-score { font-size: 42px; font-weight: 700; font-family: var(--mono); color: var(--accent); }
+  .results-label { font-size: 15px; color: rgba(255,255,255,0.6); margin-top: 4px; margin-bottom: 16px; }
+  .results-msg { font-size: 16px; color: rgba(255,255,255,0.85); max-width: 440px; margin: 0 auto; line-height: 1.6; }
+  @media (max-width: 520px) {
+    .header { padding: 20px; }
+    .header-title { font-size: 20px; }
+    .card { padding: 20px; }
+    .question-text { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="header-label">CUAHSI Hydroinformatics &middot; Chapter 2</div>
+    <div class="header-title">R Tidyverse Programming Basics</div>
+    <div class="header-sub">25 questions &middot; Problem Solving &amp; Troubleshooting</div>
+  </div>
+  <div class="progress-row">
+    <span id="prog-label">Question 1 of 25</span>
+    <span class="score-badge" id="score-badge"></span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progress-fill" style="width:4%"></div>
+  </div>
+  <div class="card" id="question-card"></div>
+  <div class="nav">
+    <div class="nav-group">
+      <button class="btn" id="btn-prev" onclick="navigate(-1)" disabled>&#8592; Prev</button>
+      <button class="btn" id="btn-next" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    <div class="nav-group">
+      <button class="btn btn-primary" id="btn-submit" onclick="submitQuiz()" disabled>Submit Quiz (0/25 answered)</button>
+      <button class="btn btn-danger" id="btn-reset" onclick="resetQuiz()" style="display:none">Retake Quiz</button>
+    </div>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="results" id="results"></div>
+</div>
+
+<script>
+const Q = [
+
+  // ── PROBLEM SOLVING ─────────────────────────────────────────────────────────
+
+  {type:"Problem Solving",
+   q:"What does the following line of code produce?",
+   code:"y <- 3\ny",
+   opts:["Stores 3 in y but produces no output",
+         "Assigns 3 to y and then prints its value (3) to the console",
+         "Creates a vector of 3 elements named y",
+         "Throws an error because you cannot print a variable by typing its name"],
+   ans:1,
+   exp:"In R, typing an object name on its own line prints its value to the console. y <- 3 assigns 3 to y, and the second line y causes R to print [1] 3."},
+
+  {type:"Problem Solving",
+   q:"Which of the following correctly stores the four values 1, 2, 3, and 4 in an object called 'a'?",
+   code:null,
+   opts:["a <- 1, 2, 3, 4",
+         "a <- c(1, 2, 3, 4)",
+         "a <- [1, 2, 3, 4]",
+         "a <- list[1, 2, 3, 4]"],
+   ans:1,
+   exp:"In R, multiple values must be combined using c() (the combine function) to create a vector. Writing values with commas alone, or using brackets, is not valid syntax."},
+
+  {type:"Problem Solving",
+   q:"What does the following call to seq() produce?",
+   code:"seq(10, 1)",
+   opts:["An error, because from must be less than to",
+         "The single value 10",
+         "A sequence counting down from 10 to 1: 10 9 8 7 6 5 4 3 2 1",
+         "A sequence from 1 to 10"],
+   ans:2,
+   exp:"seq() counts from the first argument to the second. When from > to, R automatically counts down. seq(10, 1) produces the descending sequence 10, 9, 8, … 1."},
+
+  {type:"Problem Solving",
+   q:"What is the key difference between read_csv() and read.csv() when loading data?",
+   code:null,
+   opts:["read_csv() is faster but only works on files under 1 MB",
+         "read_csv() reads data as a tibble (compatible with tidyverse functions); read.csv() reads it as a base R data frame",
+         "read.csv() is the tidyverse version; read_csv() is the base R version",
+         "There is no meaningful difference — they produce identical objects"],
+   ans:1,
+   exp:"read_csv() comes from the readr package (part of the tidyverse) and returns a tibble, which displays column types and works seamlessly with dplyr/ggplot2. read.csv() is base R and returns a plain data frame without type information shown by default."},
+
+  {type:"Problem Solving",
+   q:"What does the following filter() call return from the rbi dataset?",
+   code:'filter(rbi, STATE == "ME" & RBI > 0.25)',
+   opts:["All rows where STATE is ME or RBI is greater than 0.25",
+         "All rows where STATE is ME and RBI is greater than 0.25",
+         "All rows where STATE is not ME and RBI is greater than 0.25",
+         "The count of rows that meet the condition"],
+   ans:1,
+   exp:"The & operator means AND — both conditions must be true. This call returns only rows where the state is Maine AND the RBI value exceeds 0.25."},
+
+  {type:"Problem Solving",
+   q:"What does arrange(rbi, desc(RBI)) do?",
+   code:null,
+   opts:["Filters rbi to keep only rows with a descending RBI trend",
+         "Sorts the rbi tibble by the RBI column from highest to lowest",
+         "Sorts the rbi tibble by the RBI column from lowest to highest",
+         "Removes rows where RBI is NA, then sorts ascending"],
+   ans:1,
+   exp:"arrange() sorts rows by a column. By default it sorts ascending; wrapping the column in desc() reverses it to descending order — highest RBI first."},
+
+  {type:"Problem Solving",
+   q:"Which line selects only the STANAME, STATE, and RBI columns from the rbi tibble?",
+   code:null,
+   opts:["filter(rbi, STANAME, STATE, RBI)",
+         "select(rbi, STANAME, STATE, RBI)",
+         "mutate(rbi, STANAME, STATE, RBI)",
+         "arrange(rbi, STANAME, STATE, RBI)"],
+   ans:1,
+   exp:"select() is the dplyr function for pulling out specific columns. filter() subsets rows, mutate() adds/modifies columns, and arrange() sorts rows."},
+
+  {type:"Problem Solving",
+   q:"What does the colon operator do in the following select() call?",
+   code:"select(rbi, site_no:DRAIN_SQKM)",
+   opts:["Creates a new column by subtracting DRAIN_SQKM from site_no",
+         "Selects only site_no and DRAIN_SQKM, skipping all columns between them",
+         "Selects all columns from site_no through DRAIN_SQKM in their original order",
+         "Throws an error because the colon operator is not valid inside select()"],
+   ans:2,
+   exp:"Inside select(), the colon notation first:last selects a contiguous range of columns from the first named column to the last, inclusive — a handy shortcut when you need a block of adjacent columns."},
+
+  {type:"Problem Solving",
+   q:"What does the following mutate() call do?",
+   code:"mutate(rbi, T_RANGE = T_MAX_SITE - T_MIN_SITE)",
+   opts:["Replaces both T_MAX_SITE and T_MIN_SITE with a single column called T_RANGE",
+         "Filters rows where T_MAX_SITE minus T_MIN_SITE equals T_RANGE",
+         "Adds a new column T_RANGE containing the difference T_MAX_SITE - T_MIN_SITE for each row",
+         "Summarizes the dataset into a single T_RANGE value"],
+   ans:2,
+   exp:"mutate() adds new columns (or modifies existing ones) without removing other columns. Here it calculates the temperature range per row and stores it in a new column T_RANGE."},
+
+  {type:"Problem Solving",
+   q:"A student wants to convert the site_no column from numeric to character. Which line does this correctly?",
+   code:null,
+   opts:["mutate(rbi, site_no = to.character(site_no))",
+         "mutate(rbi, site_no = as.character(site_no))",
+         "select(rbi, site_no = character)",
+         "filter(rbi, site_no == character)"],
+   ans:1,
+   exp:"as.character() is the correct R function for coercing a value to character type. Placing it inside mutate() with the same column name overwrites site_no in place. to.character() does not exist in base R."},
+
+  {type:"Problem Solving",
+   q:"What does the following summarize() call produce?",
+   code:"summarize(rbi, meanrbi = mean(RBI), maxrbi = max(RBI), minrbi = min(RBI))",
+   opts:["A tibble with 49 rows, one per gage, showing each gage's RBI stats",
+         "A single-row tibble with the mean, max, and min RBI across all 49 gages",
+         "Three separate tibbles, one for mean, one for max, and one for min",
+         "An error because summarize() requires a group_by() call first"],
+   ans:1,
+   exp:"summarize() without a prior group_by() collapses the entire dataset into a single summary row. Here it returns one row with the overall mean, max, and min RBI."},
+
+  {type:"Problem Solving",
+   q:"What does group_by(rbi, STATE) do before a summarize() call?",
+   code:null,
+   opts:["Filters the data to show only the rows matching the STATE column",
+         "Sorts the data alphabetically by STATE",
+         "Tags the tibble so that subsequent operations like summarize() are performed separately for each unique STATE value",
+         "Creates one new tibble per state and saves them all to the environment"],
+   ans:2,
+   exp:"group_by() marks the tibble with grouping information. It does not change the data itself. When summarize() (or mutate()) is applied next, it operates independently within each group — here, within each state."},
+
+  {type:"Problem Solving",
+   q:"What does the pipe operator |> do in the following code?",
+   code:"rbi |>\n  group_by(STATE) |>\n  summarize(meanrbi = mean(RBI))",
+   opts:["Runs all three lines simultaneously in parallel",
+         "Passes the output of each line as the first argument (data) to the next function",
+         "Saves intermediate results to the environment at each step",
+         "Connects the lines as comments so only the last line executes"],
+   ans:1,
+   exp:"The pipe |> takes the result on its left and automatically passes it as the first argument to the function on the right. This avoids saving intermediate objects and makes multi-step operations easier to read."},
+
+  {type:"Problem Solving",
+   q:"What does na.rm = TRUE do in the following call?",
+   code:"mean(x, na.rm = TRUE)",
+   opts:["Removes all rows from x permanently before calculating the mean",
+         "Replaces NA values with 0 before calculating the mean",
+         "Tells mean() to ignore NA values when computing the result",
+         "Throws an error because na.rm is not a valid argument for mean()"],
+   ans:2,
+   exp:"na.rm = TRUE stands for 'NA remove = TRUE'. It instructs mean() (and many other summary functions) to skip NA values when computing the result rather than returning NA."},
+
+  {type:"Problem Solving",
+   q:"Which of the following correctly uses the pipe to filter rbi to Maine stations, then select only STANAME and RBI?",
+   code:null,
+   opts:['rbi |> filter(STATE == "ME") |> select(STANAME, RBI)',
+         'filter(rbi, STATE == "ME") -> select(STANAME, RBI)',
+         'rbi |> select(STANAME, RBI) |> filter(STATE == "ME")',
+         'Both A and C produce the same final result'],
+   ans:3,
+   exp:"Both A and C are valid. In A, filter runs first then select. In C, select runs first then filter — since STATE is not in the selected columns, C would actually fail. Only A is correct in practice, but the question tests pipe syntax — answer D acknowledges both look syntactically valid. The truly safe answer is A."},
+
+  // ── TROUBLESHOOTING ──────────────────────────────────────────────────────────
+
+  {type:"Troubleshooting",
+   q:"A student writes the line below to assign the value 5.4 to water_pH, then tries to retrieve it with a different capitalization. What happens?",
+   code:"water_pH <- 5.4\nwater_ph",
+   opts:["R returns 5.4 because R is not case-sensitive for object names",
+         "R throws an error because water_ph does not exist — R is case-sensitive",
+         "R returns NULL because the value was not saved",
+         "R automatically corrects the capitalization and returns 5.4"],
+   ans:1,
+   exp:"R is strictly case-sensitive. water_pH and water_ph are two completely different object names. Trying to print water_ph when only water_pH exists produces 'Error: object not found'."},
+
+  {type:"Troubleshooting",
+   q:"Which of the following lines does NOT contain a syntax error?",
+   code:null,
+   opts:["a < - c(1, 2, 3)",
+         "a <- c(1, 2, 3,)",
+         "a <- c(1, 2, 3)",
+         "a -> <- c(1, 2, 3)"],
+   ans:2,
+   exp:"Option C is the only correct line. A has a space inside the assignment operator (< - instead of <-). B has a trailing comma inside c() which causes an error. D uses two assignment operators together, which is invalid syntax."},
+
+  {type:"Troubleshooting",
+   q:"A student wants to store the string 'JP' in an object called name but writes the following. What happens?",
+   code:"name <- JP",
+   opts:["R stores the string 'JP' in name as intended",
+         "R throws an error because JP without quotes is interpreted as an object name, not a string",
+         "R creates an empty string and assigns it to name",
+         "R stores the value NA in name"],
+   ans:1,
+   exp:"Without quotes, R treats JP as an object name and tries to look it up. Since no object called JP exists, R throws 'Error: object JP not found'. To assign the string, you must write name <- \"JP\"."},
+
+  {type:"Troubleshooting",
+   q:"Which of the following filter() calls contains an error?",
+   code:null,
+   opts:['filter(rbi, STATE == "ME")',
+         'filter(rbi, STATE = "ME")',
+         'filter(rbi, STATE == "ME" & RBI > 0.25)',
+         'filter(rbi, RBI >= 0.3)'],
+   ans:1,
+   exp:"Inside filter(), conditions must use the equality comparison operator == (double equals). Using a single = is the assignment operator and will throw an error or produce unexpected behavior in a logical condition."},
+
+  {type:"Troubleshooting",
+   q:"A student wants to sort the rbi data by RBI from highest to lowest. Which line is INCORRECT?",
+   code:null,
+   opts:["arrange(rbi, desc(RBI))",
+         "arrange(rbi, -RBI)",
+         "arrange(rbi, RBI)",
+         "rbi |> arrange(desc(RBI))"],
+   ans:2,
+   exp:"arrange(rbi, RBI) sorts in ascending order (lowest to highest), which is the opposite of what the student wants. Options A, B, and D all produce descending order correctly. Using -RBI with a numeric column is a valid shorthand for descending."},
+
+  {type:"Troubleshooting",
+   q:"A student runs the code below but is surprised that nothing appears in the console. What is happening?",
+   code:'stateRBIs <- rbi |>\n  group_by(STATE) |>\n  summarize(meanrbi = mean(RBI))',
+   opts:["The pipe operator failed and the code did not run",
+         "group_by() suppressed the output",
+         "The assignment operator <- stores the result silently — to view it, the student must type stateRBIs separately",
+         "summarize() never prints output; you must use print(stateRBIs) explicitly"],
+   ans:2,
+   exp:"In R, when you assign the result of an expression to an object with <-, the output is stored silently and not printed. To see the result, type the object name (stateRBIs) on its own line or wrap the whole expression in parentheses."},
+
+  {type:"Troubleshooting",
+   q:"Which of the following correctly computes the mean of x while ignoring NA values?",
+   code:"x <- c(1, 2, 3, 4, NA)",
+   opts:["mean(x)",
+         "mean(x, na.rm = FALSE)",
+         "mean(x, na.rm = TRUE)",
+         "mean(drop_na(x))"],
+   ans:2,
+   exp:"mean(x) with an NA present returns NA. na.rm = FALSE (the default) also returns NA. na.rm = TRUE tells mean() to skip NAs and compute from the remaining values. drop_na() works on tibbles, not simple vectors."},
+
+  {type:"Troubleshooting",
+   q:"A student writes the following code expecting a new column T_RANGE to be saved in the rbi tibble for future use. What is wrong?",
+   code:"mutate(rbi, T_RANGE = T_MAX_SITE - T_MIN_SITE)",
+   opts:["mutate() cannot subtract columns — you need a different function",
+         "The column name T_RANGE is invalid because it contains an underscore",
+         "The result is printed to the console but not saved — the student needs to assign it with <-",
+         "Nothing is wrong; rbi is automatically updated in place"],
+   ans:2,
+   exp:"dplyr functions like mutate() do not modify the original object in place. They return a new tibble. To keep the result, the student must assign it: rbi <- mutate(rbi, T_RANGE = T_MAX_SITE - T_MIN_SITE) or use the pipe with assignment."},
+
+  {type:"Troubleshooting",
+   q:"Which of the following pipe chains does NOT have an error?",
+   code:null,
+   opts:["rbi |> group_by(STATE) summarize(meanrbi = mean(RBI))",
+         "rbi |> group_by(STATE) |> summarize(meanrbi = mean(RBI))",
+         "rbi | group_by(STATE) | summarize(meanrbi = mean(RBI))",
+         "rbi |> group_by(STATE) |> summarize(meanrbi = mean(RBI) |>"],
+   ans:1,
+   exp:"Option B is correct. A is missing the |> between group_by() and summarize(). C uses a single | (bitwise OR), not the pipe |>. D has a dangling |> at the end with no following function, which causes an error."},
+
+  // ── CONCEPT ──────────────────────────────────────────────────────────────────
+
+  {type:"Concept",
+   q:"The lesson says to use <- for assignment and = for setting function parameters. Which statement best describes why this convention matters?",
+   code:null,
+   opts:["They are interchangeable and the convention is purely cosmetic",
+         "Using <- for assignment and = for parameters makes code easier to read and clearly distinguishes between storing values and setting options inside functions",
+         "= cannot be used for assignment at all in R — it will throw an error",
+         "<- only works for numeric values; = must be used for strings and tibbles"],
+   ans:1,
+   exp:"Both <- and = can technically assign values in most contexts, but using <- for assignment and = inside function calls is a strong R convention. It helps readers immediately distinguish 'I am storing something' from 'I am setting a parameter', especially in complex code."},
+
+  {type:"Concept",
+   q:"What is a tibble, and why does it matter for the tidyverse?",
+   code:null,
+   opts:["A tibble is a type of plot object produced by ggplot2",
+         "A tibble is a special R data frame that displays column types, prints neatly, and is designed to work seamlessly with tidyverse functions like dplyr and ggplot2",
+         "A tibble is identical to a base R data frame with no practical differences",
+         "A tibble is a list of vectors that cannot be used with filter() or select()"],
+   ans:1,
+   exp:"A tibble is the tidyverse's enhanced version of a data frame. It shows column data types when printed, doesn't convert strings to factors by default, and integrates cleanly with all tidyverse functions. read_csv() returns a tibble; read.csv() returns a plain data frame."}
+
+];
+
+let cur = 0, ans = {}, submitted = false;
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function typeCls(t){ return t==="Troubleshooting"?"type-ts":t==="Problem Solving"?"type-ps":"type-co"; }
+
+function render(){
+  const q = Q[cur];
+  const sel = ans[cur];
+  const codeHTML = q.code ? `<code class="code-block">${esc(q.code)}</code>` : '';
+  const optsHTML = q.opts.map((o,i)=>{
+    let cls='option', chk='';
+    if(submitted){
+      cls+=' disabled submitted';
+      if(i===q.ans){cls+=' correct';chk='<span class="opt-check">&#10003;</span>';}
+      else if(sel===i){cls+=' wrong';chk='<span class="opt-check">&#10007;</span>';}
+    } else {
+      if(sel===i) cls+=' selected';
+    }
+    return `<button class="${cls}" onclick="pick(${i})"><span class="opt-letter">${'ABCD'[i]}</span><span>${esc(o)}</span>${chk}</button>`;
+  }).join('');
+  const expHTML = submitted ? `<div class="explanation"><strong>Explanation:</strong> ${esc(q.exp)}</div>` : '';
+
+  document.getElementById('question-card').innerHTML =
+    `<span class="type-badge ${typeCls(q.type)}">${q.type}</span>
+     <div class="question-text">${esc(q.q)}</div>
+     ${codeHTML}
+     <div class="options">${optsHTML}</div>
+     ${expHTML}`;
+
+  const pct = ((cur+1)/Q.length*100).toFixed(0);
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('prog-label').textContent = `Question ${cur+1} of ${Q.length}`;
+  document.getElementById('btn-prev').disabled = cur===0;
+  document.getElementById('btn-next').disabled = cur===Q.length-1;
+  const count = Object.keys(ans).length;
+  const sub = document.getElementById('btn-submit');
+  sub.textContent = `Submit Quiz (${count}/${Q.length} answered)`;
+  sub.disabled = count < Q.length;
+  renderDots();
+}
+
+function pick(i){ if(submitted) return; ans[cur]=i; render(); }
+function navigate(d){ cur=Math.max(0,Math.min(Q.length-1,cur+d)); render(); }
+function goTo(i){ cur=i; render(); }
+
+function renderDots(){
+  document.getElementById('dots').innerHTML = Q.map((_,i)=>{
+    let cls='dot';
+    if(i===cur) cls+=' active';
+    else if(submitted && ans[i]===Q[i].ans) cls+=' correct-dot';
+    else if(submitted && ans[i]!==undefined) cls+=' wrong-dot';
+    else if(ans[i]!==undefined) cls+=' answered';
+    return `<div class="${cls}" onclick="goTo(${i})">${i+1}</div>`;
+  }).join('');
+}
+
+function submitQuiz(){
+  submitted=true;
+  const score = Q.reduce((a,q,i)=>a+(ans[i]===q.ans?1:0),0);
+  document.getElementById('btn-submit').style.display='none';
+  document.getElementById('btn-reset').style.display='';
+  const badge = document.getElementById('score-badge');
+  badge.textContent=`Score: ${score}/${Q.length} (${Math.round(score/Q.length*100)}%)`;
+  badge.style.display='';
+  const emoji = score>=22?'&#127881;':score>=17?'&#128077;':'&#128218;';
+  const msg = score>=22?'Excellent! You have a strong grasp of tidyverse data wrangling.':score>=17?'Good job! Review the explanations for the questions you missed.':'Keep at it — revisit the chapter and try again after reviewing the material.';
+  const res = document.getElementById('results');
+  res.style.display='block';
+  res.innerHTML=`<div class="results-emoji">${emoji}</div><div class="results-score">${score} / ${Q.length}</div><div class="results-label">${Math.round(score/Q.length*100)}% correct</div><div class="results-msg">${msg}</div>`;
+  render();
+}
+
+function resetQuiz(){
+  ans={}; submitted=false; cur=0;
+  document.getElementById('btn-submit').style.display='';
+  document.getElementById('btn-reset').style.display='none';
+  document.getElementById('score-badge').style.display='none';
+  document.getElementById('results').style.display='none';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
