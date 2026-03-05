@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chapter 6 Quiz: Joins, Pivots, and USGS dataRetrieval</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #0f2744;
+    --navy-mid: #1a3a5c;
+    --navy-light: #2a5298;
+    --accent: #6366f1;
+    --green: #22c55e;
+    --red: #ef4444;
+    --bg: #f0f5fb;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; position: relative; z-index: 1; }
+  .header {
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: 'joins';
+    position: absolute;
+    right: -10px; top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 80px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.04);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .header-label { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .header-title { font-size: 24px; font-weight: 700; color: white; margin-bottom: 6px; }
+  .header-sub { font-size: 14px; color: rgba(255,255,255,0.55); }
+  .progress-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .score-badge { background: #dcfce7; color: #166534; font-weight: 700; padding: 3px 12px; border-radius: 99px; font-size: 13px; display: none; }
+  .progress-bar-bg { background: #dce4ed; border-radius: 99px; height: 6px; margin-bottom: 24px; }
+  .progress-bar-fill { background: linear-gradient(90deg, var(--accent), var(--navy-light)); height: 6px; border-radius: 99px; transition: width 0.4s ease; }
+  .card { background: var(--card); border-radius: 14px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(15,39,68,0.08); border: 1px solid var(--border); }
+  .type-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; margin-bottom: 16px; }
+  .type-ts { background: #fff7ed; color: #c2410c; }
+  .type-ps { background: #eff6ff; color: #1d4ed8; }
+  .type-co { background: #f5f3ff; color: #6d28d9; }
+  .question-text { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.65; margin-bottom: 16px; }
+  .code-block { display: block; background: #0f2744; color: #c4b5fd; font-family: var(--mono); font-size: 13px; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; white-space: pre; overflow-x: auto; line-height: 1.7; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border-radius: 10px; border: 2px solid var(--border); background: #f8fafc; cursor: pointer; transition: all 0.15s; font-size: 14.5px; line-height: 1.5; color: var(--text); font-family: var(--sans); text-align: left; width: 100%; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: #f5f3ff; }
+  .option.selected:not(.submitted) { border-color: var(--navy-light); background: #eff6ff; }
+  .option.correct { border-color: var(--green); background: #f0fdf4; color: #166534; }
+  .option.wrong { border-color: var(--red); background: #fef2f2; color: #991b1b; }
+  .option.disabled { cursor: default; }
+  .opt-letter { min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--mono); background: var(--border); color: var(--muted); flex-shrink: 0; margin-top: 1px; transition: all 0.15s; }
+  .option.selected:not(.submitted) .opt-letter { background: var(--navy-light); color: white; }
+  .option.correct .opt-letter { background: var(--green); color: white; }
+  .option.wrong .opt-letter { background: var(--red); color: white; }
+  .opt-check { margin-left: auto; font-size: 18px; flex-shrink: 0; padding-left: 8px; }
+  .explanation { margin-top: 18px; background: #f1f5f9; border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; padding: 13px 16px; font-size: 13.5px; color: #334155; line-height: 1.6; animation: fadeIn 0.3s ease; }
+  .explanation strong { color: var(--navy-mid); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .nav-group { display: flex; gap: 10px; }
+  .btn { padding: 10px 22px; border-radius: 9px; border: 2px solid var(--border); background: white; cursor: pointer; font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--text); transition: all 0.15s; }
+  .btn:hover:not(:disabled) { border-color: var(--navy-mid); background: #f8fafc; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-primary:hover:not(:disabled) { background: var(--navy-mid); border-color: var(--navy-mid); }
+  .btn-danger { background: var(--red); color: white; border-color: var(--red); }
+  .btn-danger:hover:not(:disabled) { background: #dc2626; }
+  .dots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 28px; }
+  .dot { width: 28px; height: 28px; border-radius: 50%; background: var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); transition: all 0.15s; font-family: var(--mono); }
+  .dot.active { background: var(--navy); color: white; transform: scale(1.15); }
+  .dot.answered { background: #a5b4fc; color: #312e81; }
+  .dot.correct-dot { background: var(--green); color: white; }
+  .dot.wrong-dot { background: var(--red); color: white; }
+  .results { background: var(--navy); border-radius: 14px; padding: 32px; text-align: center; color: white; margin-top: 24px; animation: fadeIn 0.4s ease; display: none; }
+  .results-emoji { font-size: 48px; margin-bottom: 12px; }
+  .results-score { font-size: 42px; font-weight: 700; font-family: var(--mono); color: var(--accent); }
+  .results-label { font-size: 15px; color: rgba(255,255,255,0.6); margin-top: 4px; margin-bottom: 16px; }
+  .results-msg { font-size: 16px; color: rgba(255,255,255,0.85); max-width: 440px; margin: 0 auto; line-height: 1.6; }
+  @media (max-width: 520px) {
+    .header { padding: 20px; }
+    .header-title { font-size: 18px; }
+    .card { padding: 20px; }
+    .question-text { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div style="max-width:780px;margin:0 auto 20px;padding:0 16px;position:relative;z-index:1;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#64748b;background:white;border:2px solid #e2e8f0;padding:7px 14px;border-radius:99px;transition:all 0.15s;box-shadow:0 1px 4px rgba(15,39,68,0.06);"
+     onmouseover="this.style.borderColor='#2a5298';this.style.color='#0f2744';"
+     onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b';">
+    &#8592; Quiz Hub
+  </a>
+</div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="header-label">CUAHSI Hydroinformatics &middot; Chapter 6</div>
+    <div class="header-title">Joins, Pivots, and USGS dataRetrieval</div>
+    <div class="header-sub">25 questions &middot; Problem Solving &amp; Troubleshooting</div>
+  </div>
+  <div class="progress-row">
+    <span id="prog-label">Question 1 of 25</span>
+    <span class="score-badge" id="score-badge"></span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progress-fill" style="width:4%"></div>
+  </div>
+  <div class="card" id="question-card"></div>
+  <div class="nav">
+    <div class="nav-group">
+      <button class="btn" id="btn-prev" onclick="navigate(-1)" disabled>&#8592; Prev</button>
+      <button class="btn" id="btn-next" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    <div class="nav-group">
+      <button class="btn btn-primary" id="btn-submit" onclick="submitQuiz()" disabled>Submit Quiz (0/25 answered)</button>
+      <button class="btn btn-danger" id="btn-reset" onclick="resetQuiz()" style="display:none">Retake Quiz</button>
+    </div>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="results" id="results"></div>
+</div>
+
+<script>
+// Answer key distribution: A=6, B=6, C=7, D=6
+const Q = [
+
+  // 1 — ans: C
+  {type:"Problem Solving",
+   q:"What is the main advantage of using the dataRetrieval package instead of manually downloading from waterdata.usgs.gov?",
+   code:null,
+   opts:[
+     "It provides access to data not available on the USGS website",
+     "It automatically cleans and fills missing values before returning data",
+     "It lets you access the same public USGS data programmatically, making workflows faster and reproducible",
+     "It is the only way to get data from gages built after 2010"
+   ],
+   ans:2,
+   exp:"The dataRetrieval package connects to the same USGS NWIS data available on the website but lets you work entirely in R code. This makes workflows reproducible and much faster when working with many sites or time periods."},
+
+  // 2 — ans: A
+  {type:"Problem Solving",
+   q:"When passing a USGS site number to dataRetrieval functions, what format is required?",
+   code:null,
+   opts:[
+     'A character string with the agency prefix, e.g. "USGS-03171000"',
+     "A numeric value with leading zeros, e.g. 03171000",
+     "An integer — no prefix or quotes needed",
+     "A factor variable with the site number as a level"
+   ],
+   ans:0,
+   exp:"dataRetrieval requires site numbers as character strings (in quotes) that include the 'USGS-' agency code prefix. Passing a bare number or omitting the prefix will not work."},
+
+  // 3 — ans: D
+  {type:"Problem Solving",
+   q:"Which dataRetrieval function downloads daily time series values (e.g. mean daily discharge) for a set of sites?",
+   code:null,
+   opts:[
+     "read_waterdata_ts_meta()",
+     "readWQPqw()",
+     "read_waterdata_monitoring_location()",
+     "read_waterdata_daily()"
+   ],
+   ans:3,
+   exp:"read_waterdata_daily() downloads daily time series values for specified sites, parameters, and date ranges. read_waterdata_ts_meta() returns metadata about available data, and readWQPqw() is for water quality grab samples."},
+
+  // 4 — ans: B
+  {type:"Problem Solving",
+   q:"What does the following argument do inside read_waterdata_daily()?",
+   code:'time = c("2006-10-01", "2008-09-30")',
+   opts:[
+     "Sets the time zone for all downloaded timestamps",
+     "Specifies the start and end dates of the data to download, in YYYY-MM-DD format",
+     "Creates a new column called 'time' and fills it with those two values",
+     "Filters the returned data to only those two specific dates"
+   ],
+   ans:1,
+   exp:"The time argument takes a two-element character vector specifying the start and end of the desired date range. Dates must be in YYYY-MM-DD format as strings."},
+
+  // 5 — ans: C
+  {type:"Problem Solving",
+   q:"In the lesson, a left_join() is performed immediately after read_waterdata_daily() using parameterCdFile. What does this accomplish?",
+   code:null,
+   opts:[
+     "It filters the data to only rows matching known parameter codes",
+     "It converts the data from long to wide format",
+     "It adds human-readable parameter names to data that only contains numeric codes like '00060'",
+     "It removes duplicate rows caused by downloading multiple sites"
+   ],
+   ans:2,
+   exp:"The downloaded data identifies measurements only by numeric parameter codes (e.g. '00060'). Joining with parameterCdFile — a lookup table bundled with dataRetrieval — attaches the human-readable parameter names like 'Discharge', making the data much easier to interpret."},
+
+  // 6 — ans: A
+  {type:"Problem Solving",
+   q:"What does str_detect(monitoring_location_id, \"USGS-\") do when used inside filter()?",
+   code:null,
+   opts:[
+     "Keeps only rows where the site ID contains the string 'USGS-', removing non-USGS entries",
+     "Converts the site ID column to uppercase",
+     "Sorts the data so USGS sites appear first",
+     "Checks whether each site is currently active"
+   ],
+   ans:0,
+   exp:"str_detect() from the stringr package returns TRUE when a string contains the specified pattern. Inside filter(), it keeps only rows where the monitoring_location_id includes 'USGS-', removing any non-USGS monitoring locations that may have appeared in the bounding box query."},
+
+  // 7 — ans: D
+  {type:"Concept",
+   q:"What is the fundamental purpose of a join operation?",
+   code:null,
+   opts:[
+     "To sort two datasets by a shared column",
+     "To stack two datasets with identical columns on top of each other",
+     "To remove duplicate rows that appear in both datasets",
+     "To combine rows from two datasets by matching them on a shared key column"
+   ],
+   ans:3,
+   exp:"A join matches rows from two tables based on a shared key column (such as a site ID or date) and combines the data from both into one table. This is essential when related information is stored in separate datasets."},
+
+  // 8 — ans: A
+  {type:"Concept",
+   q:"You have discharge data for 500 dates and chemistry grab samples for only 30 of those dates. You want to keep all 500 discharge rows and attach chemistry where it exists. Which join is correct?",
+   code:null,
+   opts:[
+     "left_join() — keeps all discharge rows; attaches chemistry where dates match; NA elsewhere",
+     "inner_join() — keeps only the 30 dates present in both datasets",
+     "right_join() — keeps only the 30 chemistry rows",
+     "full_join() — keeps every row from both datasets regardless of matches"
+   ],
+   ans:0,
+   exp:"left_join() preserves every row in the left (discharge) dataset and attaches matching rows from the right (chemistry) dataset. Dates with no chemistry receive NA. This is the canonical left_join() scenario described in the lesson."},
+
+  // 9 — ans: C
+  {type:"Concept",
+   q:"Two datasets share a key. River1 and River2 appear in both; River3 is only in the left dataset; River5 is only in the right. What does inner_join() return?",
+   code:null,
+   opts:[
+     "River1, River2, and River3 — all left-side rows",
+     "All four rivers, with NAs filled in where data is missing",
+     "Only River1 and River2 — the rows where both datasets have a match",
+     "River1, River2, and River5 — all right-side rows"
+   ],
+   ans:2,
+   exp:"inner_join() keeps only rows where the key exists in BOTH datasets. River3 (left only) and River5 (right only) are dropped. Only the two matching rows are returned."},
+
+  // 10 — ans: B
+  {type:"Concept",
+   q:"What does full_join() do when a key value exists in one dataset but not the other?",
+   code:null,
+   opts:[
+     "It drops any row that does not have a match in both datasets",
+     "It keeps all rows from both datasets and fills missing values with NA",
+     "It keeps only the row from whichever dataset is larger",
+     "It throws an error if any unmatched keys are found"
+   ],
+   ans:1,
+   exp:"full_join() is the most inclusive join — it retains every row from both datasets. Where a key has no match on one side, R fills in NA for the missing columns. The lesson calls it 'the hoarder of the joins'."},
+
+  // 11 — ans: D
+  {type:"Problem Solving",
+   q:"The key column is named 'monitoring_location_id' in the left tibble but 'location_id' in the right. Which join syntax is correct?",
+   code:null,
+   opts:[
+     'left_join(left_tbl, right_tbl, by = "monitoring_location_id")',
+     'left_join(left_tbl, right_tbl, key = c("monitoring_location_id", "location_id"))',
+     'left_join(left_tbl, right_tbl, by = monitoring_location_id == location_id)',
+     'left_join(left_tbl, right_tbl, by = c("monitoring_location_id" = "location_id"))'
+   ],
+   ans:3,
+   exp:"When key columns have different names, use by = c(\"left_name\" = \"right_name\"). Both names must be quoted strings. Option A fails because 'location_id' doesn't exist in the left tibble. Option B uses an invalid argument name. Option C uses a logical expression, not a character vector."},
+
+  // 12 — ans: A
+  {type:"Problem Solving",
+   q:"After a left_join() produced a 61-column tibble, what function did the lesson use to reduce it to only the 7 most relevant columns?",
+   code:null,
+   opts:[
+     "select()",
+     "filter()",
+     "mutate()",
+     "pivot_wider()"
+   ],
+   ans:0,
+   exp:"select() is the dplyr function for keeping or dropping columns. After the join bloated the tibble to 61 columns, the lesson used select() to keep only monitoring_location_id, monitoring_location_name, parameter_code, parameter_name, parameter_description, begin, and end."},
+
+  // 13 — ans: C
+  {type:"Troubleshooting",
+   q:"A student writes the join below but gets an error. What is wrong?",
+   code:"left_join(dataAvailable, siteinfo, by = monitoring_location_id)",
+   opts:[
+     "left_join() requires at least three tibbles as input",
+     "dataAvailable must come after siteinfo when column names match",
+     "The by argument requires a quoted string — monitoring_location_id is missing quotes",
+     "left_join() cannot be used when both tibbles share a column name"
+   ],
+   ans:2,
+   exp:"The by argument requires a quoted character string or vector. Without quotes, R tries to evaluate monitoring_location_id as an object and throws an error. The correct form is by = \"monitoring_location_id\"."},
+
+  // 14 — ans: B
+  {type:"Troubleshooting",
+   q:"A student wants only rows where a key exists in BOTH datasets but uses full_join() by mistake. What actually happens?",
+   code:null,
+   opts:[
+     "The result is identical to inner_join() when all keys match",
+     "The result contains all rows from both datasets — including unmatched rows filled with NA — more rows than intended",
+     "R throws a warning and falls back to inner_join() behavior automatically",
+     "Only rows from the right dataset are returned"
+   ],
+   ans:1,
+   exp:"full_join() keeps everything from both datasets, adding NAs for unmatched rows. The student needed inner_join() to keep only matched rows. Using full_join() by mistake inflates the dataset with unwanted NA-filled rows."},
+
+  // 15 — ans: D
+  {type:"Concept",
+   q:"In LONG format data, how are multiple variables (e.g. temperature and discharge) typically stored?",
+   code:null,
+   opts:[
+     "Each variable has its own column with one row per date",
+     "All values are stored in one comma-separated string per row",
+     "Variables are stored only as column headers with no value column",
+     "Each observation has its own row, with a 'name' column identifying the variable and a 'value' column holding the measurement"
+   ],
+   ans:3,
+   exp:"In long format there is one row per individual measurement. A categorical column (like parameter_nm) identifies what was measured, and a value column holds the number. This is the format returned by read_waterdata_daily() — multiple parameters are stacked on top of each other."},
+
+  // 16 — ans: A
+  {type:"Concept",
+   q:"Why is long data format generally better for plotting multiple groups with ggplot2?",
+   code:null,
+   opts:[
+     "A single categorical column (like site or parameter name) can be mapped to color or facets in one aes() call, rather than writing a separate geom for each variable",
+     "ggplot2 requires long data and throws an error on wide-format input",
+     "Long data automatically removes NAs before plotting",
+     "Wide format cannot be used with geom_line() or geom_point()"
+   ],
+   ans:0,
+   exp:"With long data, a single column like parameter_nm contains labels like 'Discharge' and 'Temperature'. Passing it to facet_wrap() or color = handles all groups in one line. With wide data, each variable is its own column and you need a separate geom layer for each."},
+
+  // 17 — ans: C
+  {type:"Concept",
+   q:"Why is wide data format generally better when computing new variables with mutate()?",
+   code:null,
+   opts:[
+     "mutate() only works correctly on wide-format tibbles",
+     "Wide format automatically coerces columns to numeric before calculation",
+     "Each variable is its own column, so arithmetic between variables is a simple column formula like mutate(NO3_Load = NO3 * Flow)",
+     "The pipe operator |> requires wide format to pass data into mutate()"
+   ],
+   ans:2,
+   exp:"When related variables are separate columns you can compute new values with straightforward column math inside mutate(). In long format all values share one column, making direct arithmetic between different variables impossible without pivoting first."},
+
+  // 18 — ans: A
+  {type:"Problem Solving",
+   q:"What does pivot_wider() do to a dataset?",
+   code:null,
+   opts:[
+     "Spreads unique values from a 'names' column into separate columns, filling them with data from a 'values' column — producing a wider table with fewer rows",
+     "Adds more rows by duplicating existing observations",
+     "Converts all numeric columns to character type",
+     "Removes rows that contain NA values"
+   ],
+   ans:0,
+   exp:"pivot_wider() takes a 'names' column (whose unique values become new column headers) and a 'values' column (whose contents fill those columns). The result has more columns but fewer rows — the opposite of pivot_longer()."},
+
+  // 19 — ans: D
+  {type:"Problem Solving",
+   q:"What does pivot_longer() do to a dataset?",
+   code:null,
+   opts:[
+     "Increases the number of columns by spreading a key column into headers",
+     "Sorts rows by the character length of their values",
+     "Filters out rows where the value column exceeds a set length",
+     "Collapses multiple columns into a key-value pair, increasing the number of rows"
+   ],
+   ans:3,
+   exp:"pivot_longer() takes multiple columns and stacks them into two columns: one holding the former column name (a 'name' variable) and one holding the value. The result has more rows and fewer columns — the opposite of pivot_wider()."},
+
+  // 20 — ans: B
+  {type:"Problem Solving",
+   q:"In the lesson, why was pivot_wider() used before computing the flow difference between Radford and Ivanhoe?",
+   code:null,
+   opts:[
+     "Because ggplot2 requires wide format to draw line plots",
+     "Because in long format both sites' discharge values share one 'value' column — pivoting gives each site its own column so subtraction is possible with mutate()",
+     "Because pivot_wider() automatically calculates differences between columns",
+     "Because filter() only works on wide-format data"
+   ],
+   ans:1,
+   exp:"In long format, all discharge values — regardless of site — are stacked in a single 'value' column. You cannot subtract Radford's values from Ivanhoe's without separating them first. pivot_wider() gives each site its own column, after which mutate() subtraction is straightforward."},
+
+  // 21 — ans: C
+  {type:"Problem Solving",
+   q:"What does the following pivot_wider() call produce?",
+   code:"pivot_wider(names_from = monitoring_location_name,\n            values_from = value)",
+   opts:[
+     "Renames the 'value' column to 'monitoring_location_name'",
+     "Filters the dataset to only rows where monitoring_location_name matches value",
+     "Creates one new column per unique site name, filling each column with that site's values from the 'value' column",
+     "Creates a new row for each unique site name"
+   ],
+   ans:2,
+   exp:"names_from tells pivot_wider() which column's unique entries become new column headers. values_from specifies which column's data fills those new columns. The result has one column per unique site name, each containing that site's discharge (or other) values."},
+
+  // 22 — ans: A
+  {type:"Problem Solving",
+   q:"What does the following pivot_longer() call specify?",
+   code:"pivot_longer(cols = Spec_Cond:Chloride)",
+   opts:[
+     "Pivots all columns from Spec_Cond through Chloride into a 'name' column and a 'value' column, stacking them as new rows",
+     "Subtracts Chloride from Spec_Cond and stores the result in a new column",
+     "Keeps only Spec_Cond and Chloride and drops all other columns",
+     "Renames the Spec_Cond column to Chloride"
+   ],
+   ans:0,
+   exp:"pivot_longer(cols = Spec_Cond:Chloride) selects all columns from Spec_Cond through Chloride using the colon range syntax and pivots them to long format — creating a 'name' column with the former column names and a 'value' column with the measurements."},
+
+  // 23 — ans: D
+  {type:"Troubleshooting",
+   q:"A student runs the code below hoping to pivot discharge data wider, but the result is broken. What is wrong?",
+   code:"pivot_wider(names_from = value,\n            values_from = monitoring_location_name)",
+   opts:[
+     "pivot_wider() requires a prior group_by() call to work correctly",
+     "pivot_wider() cannot be used with monitoring location data",
+     "The pipe |> is missing before pivot_wider()",
+     "The names_from and values_from arguments are swapped — names_from should point to the site names column and values_from to the measurements column"
+   ],
+   ans:3,
+   exp:"names_from should identify the column whose unique values become new column names (the categorical variable — here, site names). values_from should identify the column with the actual measurements (numeric values). Swapping them produces nonsensical or broken output."},
+
+  // 24 — ans: B
+  {type:"Troubleshooting",
+   q:"After pivot_wider(), a student tries to reference a column named 'NEW RIVER AT RADFORD, VA' inside mutate() without backticks and gets an error. What is the correct fix?",
+   code:null,
+   opts:[
+     "Replace spaces with dots — R converts them automatically in column names",
+     "Wrap the column name in backticks: `NEW RIVER AT RADFORD, VA`",
+     "Use quotes instead: \"NEW RIVER AT RADFORD, VA\"",
+     "Column names with spaces are not valid in R and must be removed before pivoting"
+   ],
+   ans:1,
+   exp:"Column names containing spaces or special characters must be wrapped in backticks (`) when referenced in R code. Quotes are for strings, not column name references. Alternatively, renaming the column to remove spaces first (with rename()) is good practice for long-term use."},
+
+  // 25 — ans: C
+  {type:"Troubleshooting",
+   q:"Which of the following pivot_longer() calls does NOT have a syntax error?",
+   code:null,
+   opts:[
+     "pivot_longer(col = Spec_Cond:Chloride)",
+     "pivot_longer(Spec_Cond, Chloride)",
+     "pivot_longer(cols = c(Spec_Cond, Chloride))",
+     "pivot_longer(cols = Spec_Cond - Chloride)"
+   ],
+   ans:2,
+   exp:"Option C is correct — cols accepts column selections using c(), a colon range, or tidyselect helpers. Option A misspells the argument as 'col' (missing the 's'). Option B omits the required cols argument name. Option D uses a minus sign, which is not valid column selection syntax in pivot_longer()."}
+
+];
+
+// Answer distribution check (for reference):
+// A(0): Q2,6,8,12,16,18,22 = 7
+// B(1): Q4,10,14,20,24     = 5  
+// C(2): Q1,5,9,13,17,21,25 = 7
+// D(3): Q3,7,11,15,19,23   = 6
+
+let cur = 0, ans = {}, submitted = false;
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function typeCls(t){ return t==="Troubleshooting"?"type-ts":t==="Problem Solving"?"type-ps":"type-co"; }
+
+function render(){
+  const q = Q[cur];
+  const sel = ans[cur];
+  const codeHTML = q.code ? `<code class="code-block">${esc(q.code)}</code>` : '';
+  const optsHTML = q.opts.map((o,i)=>{
+    let cls='option', chk='';
+    if(submitted){
+      cls+=' disabled submitted';
+      if(i===q.ans){cls+=' correct';chk='<span class="opt-check">&#10003;</span>';}
+      else if(sel===i){cls+=' wrong';chk='<span class="opt-check">&#10007;</span>';}
+    } else {
+      if(sel===i) cls+=' selected';
+    }
+    return `<button class="${cls}" onclick="pick(${i})"><span class="opt-letter">${'ABCD'[i]}</span><span>${esc(o)}</span>${chk}</button>`;
+  }).join('');
+  const expHTML = submitted ? `<div class="explanation"><strong>Explanation:</strong> ${esc(q.exp)}</div>` : '';
+
+  document.getElementById('question-card').innerHTML =
+    `<span class="type-badge ${typeCls(q.type)}">${q.type}</span>
+     <div class="question-text">${esc(q.q)}</div>
+     ${codeHTML}
+     <div class="options">${optsHTML}</div>
+     ${expHTML}`;
+
+  const pct = ((cur+1)/Q.length*100).toFixed(0);
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('prog-label').textContent = `Question ${cur+1} of ${Q.length}`;
+  document.getElementById('btn-prev').disabled = cur===0;
+  document.getElementById('btn-next').disabled = cur===Q.length-1;
+  const count = Object.keys(ans).length;
+  const sub = document.getElementById('btn-submit');
+  sub.textContent = `Submit Quiz (${count}/${Q.length} answered)`;
+  sub.disabled = count < Q.length;
+  renderDots();
+}
+
+function pick(i){ if(submitted) return; ans[cur]=i; render(); }
+function navigate(d){ cur=Math.max(0,Math.min(Q.length-1,cur+d)); render(); }
+function goTo(i){ cur=i; render(); }
+
+function renderDots(){
+  document.getElementById('dots').innerHTML = Q.map((_,i)=>{
+    let cls='dot';
+    if(i===cur) cls+=' active';
+    else if(submitted && ans[i]===Q[i].ans) cls+=' correct-dot';
+    else if(submitted && ans[i]!==undefined) cls+=' wrong-dot';
+    else if(ans[i]!==undefined) cls+=' answered';
+    return `<div class="${cls}" onclick="goTo(${i})">${i+1}</div>`;
+  }).join('');
+}
+
+function submitQuiz(){
+  submitted=true;
+  const score = Q.reduce((a,q,i)=>a+(ans[i]===q.ans?1:0),0);
+  document.getElementById('btn-submit').style.display='none';
+  document.getElementById('btn-reset').style.display='';
+  const badge = document.getElementById('score-badge');
+  badge.textContent=`Score: ${score}/${Q.length} (${Math.round(score/Q.length*100)}%)`;
+  badge.style.display='';
+  const emoji = score>=22?'&#127881;':score>=17?'&#128077;':'&#128218;';
+  const msg = score>=22?'Excellent! You have a strong grasp of joins, pivots, and dataRetrieval.':score>=17?'Good job! Review the explanations for the questions you missed.':'Keep at it — revisit the chapter and try again after reviewing the material.';
+  const res = document.getElementById('results');
+  res.style.display='block';
+  res.innerHTML=`<div class="results-emoji">${emoji}</div><div class="results-score">${score} / ${Q.length}</div><div class="results-label">${Math.round(score/Q.length*100)}% correct</div><div class="results-msg">${msg}</div>`;
+  render();
+}
+
+function resetQuiz(){
+  ans={}; submitted=false; cur=0;
+  document.getElementById('btn-submit').style.display='';
+  document.getElementById('btn-reset').style.display='none';
+  document.getElementById('score-badge').style.display='none';
+  document.getElementById('results').style.display='none';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
