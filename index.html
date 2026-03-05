@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CUAHSI Hydroinformatics · Quiz Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #0f2744;
+    --navy-mid: #1a3a5c;
+    --navy-light: #2a5298;
+    --bg: #f0f5fb;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --ch1: #00b4d8;
+    --ch2: #10b981;
+    --ch6: #6366f1;
+    --summary: #f59e0b;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px 80px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(42,82,152,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42,82,152,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap {
+    max-width: 680px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: var(--navy);
+    border-radius: 20px;
+    padding: 40px 40px 36px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(42,82,152,0.6) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: 'R';
+    position: absolute;
+    right: -16px;
+    bottom: -20px;
+    font-family: var(--mono);
+    font-size: 160px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.04);
+    pointer-events: none;
+    line-height: 1;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .hero-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .hero-title span {
+    font-family: var(--mono);
+    color: #7dd3fc;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+    max-width: 440px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    padding-left: 4px;
+  }
+
+  /* ── Quiz cards ── */
+  .quiz-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .quiz-card {
+    background: var(--card);
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    padding: 22px 24px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.18s;
+    box-shadow: 0 2px 8px rgba(15,39,68,0.06);
+  }
+  .quiz-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15,39,68,0.12);
+  }
+  .card-ch1:hover { border-color: var(--ch1); }
+  .card-ch2:hover { border-color: var(--ch2); }
+  .card-ch6:hover { border-color: var(--ch6); }
+  .card-summary:hover { border-color: var(--summary); }
+
+  .quiz-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    flex-shrink: 0;
+    color: white;
+    letter-spacing: -0.03em;
+  }
+
+  .quiz-body { flex: 1; min-width: 0; }
+  .quiz-chapter {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .quiz-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+  .quiz-desc {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .quiz-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .quiz-pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .quiz-arrow {
+    font-size: 20px;
+    color: var(--muted);
+    transition: transform 0.18s, color 0.18s;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .quiz-card:hover .quiz-arrow { transform: translateX(4px); color: var(--text); }
+
+  /* Per-card color theming */
+  .card-ch1 .quiz-icon { background: var(--ch1); }
+  .card-ch1 .quiz-chapter { color: #0284c7; }
+  .card-ch1 .quiz-pill { background: rgba(0,180,216,0.12); color: #0284c7; }
+
+  .card-ch2 .quiz-icon { background: var(--ch2); }
+  .card-ch2 .quiz-chapter { color: #059669; }
+  .card-ch2 .quiz-pill { background: rgba(16,185,129,0.12); color: #059669; }
+
+  .card-ch6 .quiz-icon { background: var(--ch6); }
+  .card-ch6 .quiz-chapter { color: #4f46e5; }
+  .card-ch6 .quiz-pill { background: rgba(99,102,241,0.12); color: #4f46e5; }
+
+  .card-summary .quiz-icon { background: var(--summary); }
+  .card-summary .quiz-chapter { color: #b45309; }
+  .card-summary .quiz-pill { background: rgba(245,158,11,0.12); color: #b45309; }
+  .card-summary {
+    border-style: dashed;
+    background: #fffdf7;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .footer a {
+    color: var(--navy-light);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .footer a:hover { text-decoration: underline; }
+  .footer-divider {
+    width: 40px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 99px;
+    margin: 0 auto 16px;
+  }
+
+  @media (max-width: 520px) {
+    .hero { padding: 28px 22px 26px; }
+    .hero-title { font-size: 24px; }
+    .quiz-card { padding: 16px 18px; gap: 14px; }
+    .quiz-title { font-size: 15px; }
+    .quiz-icon { width: 44px; height: 44px; font-size: 13px; border-radius: 10px; }
+    .quiz-meta { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-eyebrow">CUAHSI Water Content Portal &middot; Hydroinformatics</div>
+    <div class="hero-title">Quiz <span>Hub</span></div>
+    <div class="hero-sub">Select a chapter quiz below. Each quiz includes instant feedback and detailed explanations after submission.</div>
+  </div>
+
+  <div class="section-label">Chapter Quizzes</div>
+  <div class="quiz-grid">
+
+    <a class="quiz-card card-ch1" href="plotting.html">
+      <div class="quiz-icon">Ch.1</div>
+      <div class="quiz-body">
+        <div class="quiz-chapter">Chapter 1</div>
+        <div class="quiz-title">Intro to Plotting with ggplot2</div>
+        <div class="quiz-desc">ggplot syntax, geoms, color, facets, themes, and layering</div>
+      </div>
+      <div class="quiz-meta">
+        <span class="quiz-pill">25 questions</span>
+      </div>
+      <div class="quiz-arrow">&#8594;</div>
+    </a>
+
+    <a class="quiz-card card-ch2" href="tidyverse.html">
+      <div class="quiz-icon">Ch.2</div>
+      <div class="quiz-body">
+        <div class="quiz-chapter">Chapter 2</div>
+        <div class="quiz-title">R Tidyverse Programming Basics</div>
+        <div class="quiz-desc">Assignment, vectors, tibbles, dplyr verbs, pipes, and NAs</div>
+      </div>
+      <div class="quiz-meta">
+        <span class="quiz-pill">25 questions</span>
+      </div>
+      <div class="quiz-arrow">&#8594;</div>
+    </a>
+
+    <a class="quiz-card card-ch6" href="get-format-plot.html">
+      <div class="quiz-icon">Ch.6</div>
+      <div class="quiz-body">
+        <div class="quiz-chapter">Chapter 6</div>
+        <div class="quiz-title">Joins, Pivots &amp; USGS dataRetrieval</div>
+        <div class="quiz-desc">inner/left/right/full joins, pivot_wider, pivot_longer, and the dataRetrieval package</div>
+      </div>
+      <div class="quiz-meta">
+        <span class="quiz-pill">25 questions</span>
+      </div>
+      <div class="quiz-arrow">&#8594;</div>
+    </a>
+
+  </div>
+
+  <div class="section-label">Summary Assessment</div>
+  <div class="quiz-grid">
+
+    <a class="quiz-card card-summary" href="summary.html">
+      <div class="quiz-icon">&#9733;</div>
+      <div class="quiz-body">
+        <div class="quiz-chapter">Chapters 1, 2 &amp; 6</div>
+        <div class="quiz-title">Cumulative Review Assessment</div>
+        <div class="quiz-desc">Covers all three chapters with cross-topic synthesis questions and a per-chapter score breakdown</div>
+      </div>
+      <div class="quiz-meta">
+        <span class="quiz-pill">30 questions</span>
+      </div>
+      <div class="quiz-arrow">&#8594;</div>
+    </a>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-divider"></div>
+    Course material from the
+    <a href="https://water-content-portal.cuahsi.io/hydroinformatics" target="_blank">CUAHSI Water Content Portal</a><br/>
+    Hydroinformatics &middot; JP Gannon
+  </div>
+
+</div>
+</body>
+</html>
